@@ -1,6 +1,6 @@
 ---
 name: tcm-family-meal-planner
-description: Interview a household on first use to build a confirmed food-and-recipe profile, then plan Chinese dietary-wellness meals from member ages, self-reported constitution or health concerns, tastes, allergies, familiar home dishes, available ingredients, cooking time, and meal horizon. Use for a single meal, a day, three days, or a week; run an iterative clarification and confirmation dialogue; compose a complete meal with dishes, staple, portions, preparation order, evidence-bounded cautions, and a consolidated shopping list; optionally write the confirmed plan to Apple Notes or another connected notes app only after explicit user approval and visible verification.
+description: Explain evidence-bounded Chinese food pairing and five-element annotation before planning; interview a household on first use to build a confirmed food-and-recipe profile, then plan Chinese dietary-wellness meals from member ages, self-reported constitution or health concerns, tastes, allergies, familiar home dishes, available ingredients, cooking time, and meal horizon. Use for a single meal, a day, three days, or a week; run an iterative clarification and confirmation dialogue; compose a complete meal with dishes, staple, portions, preparation order, evidence-bounded pairing notes, cautions, and a consolidated shopping list; optionally write the confirmed plan to Apple Notes or another connected notes app only after explicit user approval and visible verification.
 ---
 
 # TCM 家庭食养整餐规划
@@ -12,6 +12,46 @@ description: Interview a household on first use to build a confirmed food-and-re
 把用户提供的疾病名称、检查结果或“某某体质”视为用户自述输入，不把它们升级为 Agent 的医学判断。对儿童、孕期、慢性病、用药、严重或持续症状，优先询问是否有医生或注册中医师给出的饮食限制；涉及急性危险信号时停止规划并建议及时就医。
 
 “配伍”只在内部表示候选食材和整餐结构的确定性组合。用户可见表达统一用“食养搭配”“整餐搭配”，不使用中药方剂配伍或民间食物相克叙事。
+
+## 先向用户解释：什么是“食品配伍”和“配伍餐”
+
+第一次使用、用户询问“为什么这样搭配”，或输出中第一次出现“配伍”时，先用生活化语言解释：
+
+> 食品配伍，是按照中医食养资料中有明确出处的食材属性、体质宜慎和烹调条件，把几种食材或几道菜组织成一顿有理由的家常饭。配伍餐关注的是“这顿饭为什么这样组成、适合谁、在什么条件下成立、哪些地方还没有证据”，用于日常饮食参考。
+>
+> 它不等同于中药方剂、处方或疾病治疗方案，也不使用没有可靠依据的“食物相克”表。五行标注属于中医理论背景说明，不能单独决定菜单，更不能直接推出某种疾病或体质会被改善。
+
+把一顿饭的“配伍解释”拆成四层，不能混成一句笼统的功效话术：
+
+1. **中医食养关系**：有来源的性味、归经、传统食养原则、体质宜慎或直接组合证据。
+2. **个体适配关系**：家庭成员的年龄、过敏、硬忌口、用户自述体质和已确认的专业限制。
+3. **烹调关系**：熟制、口感、辣度、汤菜结构、设备和并行时间。
+4. **整餐结构关系**：主食、荤热菜、素热菜、汤羹等角色，以及份量、重复和采购可执行性。
+
+只有第 1 层有直接来源时，才可以称为“有直接中医食养依据的配伍关系”。第 2–4 层可以说明为什么这顿饭对家庭更容易执行，但不能替代中医证据。没有第 1 层直接依据时，用户可见标题使用“整餐组合”或“结构性搭配”，不要把普通菜谱组合包装成“真正配伍”。
+
+### 五行属性怎么讲、怎么标
+
+五行标注用于记录中医理论中的木、火、土、金、水对应背景。它与“五味”、性味、归经和现代营养分类有关联但不等同：
+
+- “酸苦甘辛咸”不能直接当成一张五行标签表；
+- 食材颜色、季节、脏腑和五行的常见对应不能互相自动推导；
+- 五行属性不能单独判断某个人的体质，也不能单独生成或阻断一顿饭；
+- 不同文献或流派出现差异时，保留来源差异，不强行合并成唯一答案。
+
+只有在资料明确支持时，才记录以下五行标注：
+
+```text
+ingredientName / recipeName
+→ element: WOOD | FIRE | EARTH | METAL | WATER | MULTIPLE
+→ mappingBasis: DIRECT_SOURCE | CLASSICAL_CORRESPONDENCE | CURATED_MAPPING
+→ sourceRef + sourcePassage + EvidenceLink
+→ scope: GENERAL | SEASONAL | CONSTITUTION | CULINARY_CONTEXT
+→ status: VERIFIED | CONTEXTUAL | PENDING | UNASSESSED | CONFLICTED
+→ cannotInfer: 不可推出的体质、疾病或功效结论
+```
+
+当前 Web App 的 `Ingredient` 已有 `natureFlavorTags`、`meridianTags` 等字段，但没有正式的 `fiveElementTags` 或五行证据模型。不得把这些现有字段改名冒充五行，也不得在没有来源的情况下新增五行值。需要进入 Web App 时，先形成五行字段和 EvidenceLink 的独立数据提案，再由 Amanda 审批 schema 和内容治理规则。
 
 ## 使用项目规则
 
@@ -70,6 +110,18 @@ claim
 - 适用人群、体质、年龄、做法、用量和时间条件没有被省略；
 - 菜谱替换、人数变化或烹法变化后，组合关系重新核验；
 - 证据只产生 `INFO`、`PREFER`、`CAUTION` 或 `BLOCK` 等有限结论，不产生治疗、处方或保证。
+
+为每顿饭生成一个配伍状态：
+
+```text
+DIRECT_EVIDENCE       有直接中医食养或正式组合证据
+CONTEXTUAL_EVIDENCE   有传统理论背景，但不足以支持直接组合结论
+STRUCTURAL_ONLY       只有菜谱、烹饪和整餐结构依据
+UNASSESSED             关键关系尚未评估
+BLOCKED                证据、过敏、监管或安全条件不满足
+```
+
+`DIRECT_EVIDENCE` 才可以在用户解释中使用“这组食材有直接组合依据”。`CONTEXTUAL_EVIDENCE`、`STRUCTURAL_ONLY` 和 `UNASSESSED` 只能如实说明证据层级。
 
 当前 App 已有 `Recipe`、`RecipeIngredient`、`Ingredient`、`ConstitutionRule`、`SourcePassage` 和 `EvidenceLink`，可以先做到“来源可追溯的固定菜谱 + 逐人食养提醒 + 确定性整餐组合”。但正式的 `DietaryPairingClaim`、subjects 和 evidence 属于 schema 审批单元 B，目前尚未批准。因此当前没有直接组合证据时，用户可见表达必须是“有证据的整餐组合”或“结构性搭配，直接组合证据尚未建立”，不能声称某两种食材形成了正式中医配伍。
 
@@ -305,9 +357,17 @@ claim
 ## 采购清单
 - [ ] [食材] [数量/单位]（用于：...）
 
+## 这顿饭的配伍解释
+- 配伍状态：有直接依据 / 理论背景 / 结构性搭配 / 尚未评估
+- 中医食养依据：说明食材、体质或组合来源支撑的具体范围
+- 五行标注：只列有来源的木、火、土、金、水标注；没有来源写“尚未建立五行标注”
+- 家庭适配：说明年龄、过敏、口味、做法和时间如何影响组合
+- 不可推出：明确写出不能推出疾病改善、治疗或保证效果
+
 ## 依据与未确定项
 - 菜谱事实依据：...
 - 食材属性或宜慎依据：...
+- 配伍关系证据：...
 - 尚未评估：...
 - 固定说明：本计划是日常饮食参考，不用于诊断、治疗或替代专业建议。
 

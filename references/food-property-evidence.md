@@ -31,6 +31,30 @@ SourceRef
 
 “鸡肉”“鸡胸肉”“熟鸡胸肉丝”不自动视为同一个证据对象；“紫菜”“干紫菜”“紫菜汤”也不自动继承属性。形态、部位、炮制和做法发生变化时重新核对。
 
+## 五行标注协议
+
+五行是中医理论背景层，不能与食材的性味、归经、颜色、季节或现代营养分类互相自动替换。项目允许保存五行标注，但每一条标注必须说明它来自哪一种对应关系，以及适用范围：
+
+```text
+element: WOOD | FIRE | EARTH | METAL | WATER | MULTIPLE
+mappingBasis: DIRECT_SOURCE | CLASSICAL_CORRESPONDENCE | CURATED_MAPPING
+scope: GENERAL | SEASONAL | CONSTITUTION | CULINARY_CONTEXT
+status: VERIFIED | CONTEXTUAL | PENDING | UNASSESSED | CONFLICTED
+sourceRef / sourcePassage / EvidenceLink: required when status is VERIFIED or CONTEXTUAL
+```
+
+规则：
+
+- 资料未直接支持时保持 `UNASSESSED`，不从颜色、味道或名字推断；
+- 不同流派或来源冲突时保留 `CONFLICTED` 或并列来源，不强行给出唯一五行；
+- 五行标注只能解释理论背景，不能单独触发 `suitable`、`caution` 或 `BLOCK`；
+- 五行标注不能单独推出某人的体质、疾病或治疗方向；
+- 当前 Web App 还没有正式五行字段，Skill 只能输出候选标注或缺口，不能自行写入数据库。
+
+用户可见表达示例：
+
+> 这条五行对应属于传统理论背景，当前资料支持到“某来源中的某种对应关系”；它不单独决定这道菜，也不能推导疾病或疗效。
+
 ## 证据等级
 
 | 状态 | Agent 可做什么 | Agent 不可做什么 |
@@ -59,6 +83,8 @@ SourceRef
 5. 换菜、换形态、换人数或换做法后重新匹配。
 
 在正式 `DietaryPairingClaim` schema 获批前，允许输出“来源可追溯的固定菜谱”“逐人食养提醒”和“结构性整餐组合”，不允许把它们升级为正式中医配伍。没有直接组合证据时，明确写“直接组合证据尚未建立”。
+
+一顿饭只有在至少有一个直接的中医食养关系或正式组合 claim，并且其他菜品通过家庭安全、角色、时长和来源检查时，才可标为 `DIRECT_EVIDENCE`。只有菜谱事实、五行背景或整餐结构时，标为 `CONTEXTUAL_EVIDENCE` 或 `STRUCTURAL_ONLY`。
 
 ## 推荐语言
 
