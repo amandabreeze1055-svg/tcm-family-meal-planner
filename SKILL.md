@@ -53,6 +53,48 @@ ingredientName / recipeName
 
 当前 Web App 的 `Ingredient` 已有 `natureFlavorTags`、`meridianTags` 等字段，但没有正式的 `fiveElementTags` 或五行证据模型。不得把这些现有字段改名冒充五行，也不得在没有来源的情况下新增五行值。需要进入 Web App 时，先形成五行字段和 EvidenceLink 的独立数据提案，再由 Amanda 审批 schema 和内容治理规则。
 
+## 知识库能力检测与无知识库降级
+
+Skill 不假设每个用户都有 Web App、SQLite 或中医资料库。每次回答涉及中医食养、五行或配伍的问题前，先检测当前可用的知识来源，并选择一个运行模式：
+
+```text
+LOCAL_GOVERNED_KB       当前工作区的 Web App、local content package 或本地只读数据库
+BUNDLED_STARTER_PACK    随 Skill 提供的、来源和授权清楚的 starter knowledge pack
+LIVE_SOURCE_DRAFT       用户提供的书籍/PDF/链接，或允许联网后临时检索的来源草案
+MEAL_ONLY               没有可验证中医知识，只做普通家常食谱规划
+```
+
+### 模式规则
+
+- `LOCAL_GOVERNED_KB`：读取配套 Web App 的项目资料和确定性规则；家庭档案仍只留在个性化上下文。
+- `BUNDLED_STARTER_PACK`：读取 Skill 附带的版本化知识包。知识包只能包含可公开使用、来源可定位、没有用户隐私的内容；它不是一张可以自由扩展的食物功效表。
+- `LIVE_SOURCE_DRAFT`：只把来源当作本次研究草案，记录标题、版本、定位、授权/使用边界和具体支撑字段。没有完成来源核验和字段级关联时，不能把草案当成长期知识或正式配伍依据。
+- `MEAL_ONLY`：可以继续采访家庭、匹配口味、组合普通菜谱、估算时间、计算份量和生成采购清单；不得输出中医性味、归经、五行、体质宜慎或正式配伍结论。
+
+### 无知识库时的对话
+
+如果用户要求“按中医思路规划”，但检测不到可验证知识库，先明确说明：
+
+> 当前环境没有可验证的中医知识库。我可以继续帮你规划普通家常餐；如果你希望保留中医食养判断，需要提供书籍、PDF、网页来源，或允许我先建立一个带来源的临时知识包。
+
+然后询问用户希望先按普通家常餐完成当前需求，还是提供资料/允许定向来源研究。用户没有明确选择前，不要把普通食谱结果包装成中医食养方案。用户选择建立知识包后，先产出来源清单、缺口清单和 draft artifact；默认只读、dry-run、`AI_DRAFT`，不自动写入用户数据库、不激活批次、不把健康档案提交到知识包。
+
+### 知识包的最小便携结构
+
+用户无需部署完整 Web App，也可以使用单文件或目录形式的只读知识包：
+
+```text
+knowledge-pack/
+├── manifest.json
+├── source-refs.json
+├── source-passages.json
+├── evidence-links.json
+├── ingredients.json
+└── recipes.json
+```
+
+推荐使用项目已有 `content-package/v1` 格式。知识包承载来源和候选内容，不承载家庭成员、过敏、体质自述、个人计划、购物记录、审核状态或认证信息。没有知识包时，Skill 仍可工作，但只能运行 `MEAL_ONLY`。
+
 ## 使用项目规则
 
 如果当前工作目录是这个 Skill 配套的 Web App 仓库，先读取仓库根目录中的：
